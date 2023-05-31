@@ -84,7 +84,6 @@ TouchLib touch(Wire, PIN_IIC_SDA, PIN_IIC_SCL, CTS820_SLAVE_ADDRESS, PIN_TOUCH_R
 #define MAZE_MODE 25
 
 #define TOTAL_MODES_COUNT 26
-#define DEFAULT_MODE 0
 
 #define RED_BLUE_SCALE 0
 #define YELLOW_PURPLE_SCALE 1
@@ -122,6 +121,7 @@ uint64_t timestamp = 0;
 bool touchEnabled = false;
 int lastTouchI = -1, lastTouchJ = -1;
 int touchPolarity = 1;
+bool touched = 0;
 
 int32_t applyCap(int32_t x) {
   if (x < MIN_RANGE) {
@@ -529,7 +529,7 @@ void setup() {
   image = (uint16_t*)malloc(WIDTH * HEIGHT * 2);
 
   // Initialize mode value, startTime, and pixelType array:
-  mode = touchEnabled ? DEFAULT_MODE : RANDOM_POINTS_MODE;
+  mode = touchEnabled ? TOUCH_ONLY_MODE : RANDOM_POINTS_MODE;
   initializeField();
 
   colorScale = RED_BLUE_SCALE;
@@ -544,9 +544,10 @@ void loop() {
   // Button 1 advances the mode, advances the color scale, and resets the field.
   if (button_1_state != prev_button_1_state) {
     if (button_1_state == LOW) {
+      touched = true;
       mode++;
       if (mode == TOTAL_MODES_COUNT) {
-        mode = touchEnabled ? DEFAULT_MODE : RANDOM_POINTS_MODE;
+        mode = touchEnabled ? TOUCH_ONLY_MODE : RANDOM_POINTS_MODE;
       }
       colorScale++;
       if (colorScale == TOTAL_SCALE_COUNT) {
@@ -561,6 +562,7 @@ void loop() {
   // Button 2 advances the color scale only, before resetting the field
   if (button_2_state != prev_button_2_state) {
     if (button_2_state == LOW) {
+      touched = true;
       colorScale++;
       if (colorScale == TOTAL_SCALE_COUNT) {
         colorScale = 0;
@@ -589,6 +591,7 @@ void loop() {
       Serial.println("Touch read error");
     }
     if (read) {
+      touched = true;
       TP_Point t = touch.getPoint(0);
       int i = HEIGHT - t.x;
       int j = t.y;
@@ -738,10 +741,11 @@ void loop() {
   if (label.length() > 0) {
     // Draw strings on the sprite for label, current fps
     sprite.setTextSize(1);
-    sprite.setTextColor(TFT_GREEN, TFT_BLACK);
+    sprite.setTextColor(TFT_YELLOW, TFT_BLACK);
     sprite.drawString(label, 0, 0, 2);
 
     if (timestamp > 0) {
+      sprite.setTextColor(TFT_BLUE, TFT_BLACK);
       sprite.drawString(String(fps) + " fps", 280, 155, 2);
 
       uint64_t total_microseconds = new_timestamp - startTime;
@@ -755,6 +759,7 @@ void loop() {
       uint64_t total_hrs = (total_min - min) / 60;
       // Serial.println(String(total_microseconds) + "   " + String(total_ms) + "    " + String(total_sec) + "   " + sec + "   " + min);
 
+      sprite.setTextColor(TFT_GREEN, TFT_BLACK);
       String seconds = String(sec);
       if(total_min < 1) {
         sprite.drawString(seconds, 0, 155, 2); 
@@ -771,6 +776,12 @@ void loop() {
               }
             sprite.drawString(String(total_hrs) + ":" + minutes + ":" + seconds, 0, 155, 2);
           }
+      }
+      if (!touched && ((touchEnabled && mode == TOUCH_ONLY_MODE) || (!touchEnabled && mode == RANDOM_POINTS_MODE && total_sec < 10))) {
+        sprite.setTextColor(TFT_RED, TFT_BLACK);
+        sprite.drawString("WAVE EQUATION SIMULATOR", 70, 60, 2);
+        sprite.setTextColor(TFT_DARKGREY, TFT_BLACK);
+        sprite.drawString("https://github.com/jtiscione/TDisplayWave/", 25, 90, 2);
       }
     }
   }
