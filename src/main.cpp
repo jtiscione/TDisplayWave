@@ -61,8 +61,8 @@ TouchLib touch(Wire, PIN_IIC_SDA, PIN_IIC_SCL, CTS820_SLAVE_ADDRESS, PIN_TOUCH_R
 #define RANDOM_POINTS_ABSORBER_MODE 2
 #define RANDOM_POINTS_MULTIFREQUENCY_MODE 3
 #define RANDOM_POINTS_MULTIFREQUENCY_ABSORBER_MODE 4
-#define CENTER_POINT_MODE 5
-#define CENTER_POINT_ABSORBER_MODE 6
+#define MONOPOLE_MODE 5
+#define MONOPOLE_ABSORBER_MODE 6
 #define DIPOLE_MODE 7
 #define DIPOLE_ABSORBER_MODE 8
 #define QUADRUPOLE_MODE 9
@@ -199,10 +199,10 @@ void initializeField() {
       pixelType[toIndex(random(30, HEIGHT - 30), random(30, WIDTH - 30))] = LOW_FREQ_NEG_SOURCE_PIXEL;
       label = "MULTIFREQUENCY POINTS" + label;
       break;
-    case CENTER_POINT_ABSORBER_MODE:
+    case MONOPOLE_ABSORBER_MODE:
       label = " (ABSORBING BOUNDARY)";
       clearField(15, 15, 15, 15); // fall through
-    case CENTER_POINT_MODE:
+    case MONOPOLE_MODE:
       pixelType[toIndex(centerI, centerJ)] = MID_FREQ_POS_SOURCE_PIXEL;
       label = "MONOPOLE" + label;
       break;
@@ -261,7 +261,7 @@ void initializeField() {
         pixelType[toIndex(i, 1)] = MID_FREQ_POS_SOURCE_PIXEL;
       }
       for (int i = 50; i < HEIGHT - 50; i++) {
-        pixelType[toIndex(i, 1.5 * i - 50)] = WALL_PIXEL;
+        pixelType[toIndex(i, 1.5 * i)] = WALL_PIXEL;
       }
       label = "FLAT MIRROR";
       break;
@@ -741,11 +741,10 @@ void loop() {
   if (label.length() > 0) {
     // Draw strings on the sprite for label, current fps
     sprite.setTextSize(1);
-    sprite.setTextColor(TFT_YELLOW, TFT_BLACK);
+    sprite.setTextColor(TFT_DARKGREY, TFT_BLACK);
     sprite.drawString(label, 0, 0, 2);
 
     if (timestamp > 0) {
-      sprite.setTextColor(TFT_BLUE, TFT_BLACK);
       sprite.drawString(String(fps) + " fps", 280, 155, 2);
 
       uint64_t total_microseconds = new_timestamp - startTime;
@@ -759,7 +758,6 @@ void loop() {
       uint64_t total_hrs = (total_min - min) / 60;
       // Serial.println(String(total_microseconds) + "   " + String(total_ms) + "    " + String(total_sec) + "   " + sec + "   " + min);
 
-      sprite.setTextColor(TFT_GREEN, TFT_BLACK);
       String seconds = String(sec);
       if(total_min < 1) {
         sprite.drawString(seconds, 0, 155, 2); 
@@ -780,7 +778,7 @@ void loop() {
       if (!touched && ((touchEnabled && mode == TOUCH_ONLY_MODE) || (!touchEnabled && mode == RANDOM_POINTS_MODE && total_sec < 10))) {
         sprite.setTextColor(TFT_RED, TFT_BLACK);
         sprite.drawString("WAVE EQUATION SIMULATOR", 70, 60, 2);
-        sprite.setTextColor(TFT_DARKGREY, TFT_BLACK);
+        sprite.setTextColor(TFT_YELLOW, TFT_BLACK);
         sprite.drawString("https://github.com/jtiscione/TDisplayWave/", 25, 90, 2);
       }
     }
