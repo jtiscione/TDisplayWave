@@ -26,11 +26,11 @@ To perform the calculation we maintain two arrays u and v of fixed-point values 
 
 Looping through all pixels, the value of u<sub>xx</sub> can be approximated at each pixel by comparing it to the average value of the neighboring pixels to the left and right, using the formula:
 
-u<sub>xx</sub> = u<sub>left</sub> + u<sub>right</sub> - 2u
+u<sub>xx</sub> = (u<sub>left</sub> + u<sub>right</sub> - 2u) / 2
 
 Similarly u<sub>yy</sub> can be approximated at each pixel by comparing to the average value of the neighboring pixels in the perpendicular direction:
 
-u<sub>yy</sub>= u<sub>top</sub> + u<sub>bottom</sub> - 2u
+u<sub>yy</sub> = (u<sub>top</sub> + u<sub>bottom</sub> - 2u) / 2
 
 By multiplying the sum u<sub>xx</sub> + u<sub>yy</sub> by our choice of c<sup>2</sup>, we can get u<sub>tt</sub>, the rate at which v changes per unit of time, and add it to v.
 
